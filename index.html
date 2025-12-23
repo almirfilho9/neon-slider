@@ -1,0 +1,225 @@
+﻿
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Neon Slder by almirfilho9</title>
+          <style>
+            :root{
+                --board-size: min(420px, 86vw);
+                --gap:8px;
+                --bg:#071126;
+                --board-surface:#081427;
+                --tile-color:#ecfffe;
+                --neon-1: #00ffd5;
+                --neon-2: #00b3ff;
+                --neon-3: #b300ff;
+            }
+            html,body{height:100%;margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);}
+            .viewport{height:100vh;display:flex;align-items:center;justify-content:center}
+            .panel{width:var(--board-size);} 
+            .shell{display:flex;flex-direction:column;align-items:center;padding:22px;border-radius:20px;background:linear-gradient(180deg,#0b2433,#04141e);box-shadow:0 30px 800px rgba(215, 219, 226, 0.7);position:relative}
+            .shell::before{content:'';position:absolute;inset:8px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);pointer-events:none}
+            .game-title{font-weight:800;color:var(--neon-2);text-align:center;margin-bottom:12px;font-size:1.05rem;text-shadow:0 4px 18px rgba(0,179,255,0.12)}
+            .screws{position:absolute;inset:12px;pointer-events:none}
+            .screw{width:10px;height:10px;background:radial-gradient(circle at 30% 30%,#fff,#999);border-radius:50%;box-shadow:inset 0 2px 3px rgba(0,0,0,0.45)}
+            .screw.tl{position:absolute;left:12px;top:12px}
+            .screw.tr{position:absolute;right:12px;top:12px}
+            .screw.bl{position:absolute;left:12px;bottom:12px}
+            .screw.br{position:absolute;right:12px;bottom:12px}
+            .board{width:100%;height:var(--board-size);background:#000000;border-radius:12px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:var(--gap);padding:var(--gap);box-shadow:0 6px 20px rgba(0,0,0,0.08);position:relative}
+              .tile{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--neon-1),var(--neon-2));color:var(--tile-color);font-weight:900;font-size:1.4rem;border-radius:10px;cursor:pointer;user-select:none;border:2px solid rgba(255,255,255,0.06);box-shadow:0 10px 30px rgba(0,179,255,0.08), 0 0 16px rgba(0,179,255,0.12), 0 0 36px rgba(0,255,213,0.06);text-shadow:0 2px 8px rgba(0,0,0,0.45);transition:transform .12s ease,box-shadow .12s ease,filter .12s}
+            .tile:active{transform:translateY(2px);box-shadow:0 3px 0 rgba(255, 255, 255, 0.05)}
+              .tile:hover{filter:brightness(1.08);transform:translateY(-4px)}
+            .tile.hidden{background:transparent;cursor:default;box-shadow:none;border:0}
+            .controls{display:flex;gap:10px;justify-content:center;margin-top:12px}
+            .controls button{
+              padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:linear-gradient(180deg, rgba(0,179,255,0.14), rgba(179,0,255,0.06));color:var(--tile-color);font-weight:700;cursor:pointer;
+              box-shadow:0 8px 30px rgba(0,179,255,0.06), 0 0 20px rgba(0,179,255,0.12), inset 0 -2px 10px rgba(0,0,0,0.25);
+              transition:transform .12s ease,box-shadow .12s ease,filter .12s;
+            }
+            .controls button:hover{transform:translateY(-3px);filter:brightness(1.06);box-shadow:0 14px 36px rgba(0,179,255,0.12),0 0 30px rgba(0,179,255,0.18)}
+            .controls button:active{transform:translateY(1px);box-shadow:0 4px 10px rgba(0,0,0,0.2)}
+            .controls button:focus{outline:none;box-shadow:0 0 0 6px rgba(0,179,255,0.08)}
+            .message{margin-top:12px;text-align:center;font-weight:600;color:#23664f}
+            #titlebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  -webkit-app-region: drag;
+  z-index: 1000;
+}
+
+#drag-region {
+  flex-grow: 1;
+  -webkit-app-region: drag;
+}
+
+#window-controls {
+  display: flex;
+  -webkit-app-region: no-drag;
+}
+
+#window-controls button {
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#close-btn:hover { background: #e81123; }
+#minimize-btn:hover, #maximize-btn:hover { background: rgba(255,255,255,0.1); }
+          </style>
+        </head>
+        <body>
+
+            <div id="titlebar">
+            <div id="drag-region"></div>
+                <div id="window-controls">
+                    <button id="minimize-btn">_</button>
+                    <button id="maximize-btn">□</button>
+                    <button id="close-btn">×</button>
+                </div>
+           </div>
+     
+          <div class="viewport">
+            <div class="shell" role="region" aria-label="Gabinete do jogo">
+              <div class="screws" aria-hidden="true">
+                <div class="screw tl"></div>
+                <div class="screw tr"></div>
+                <div class="screw bl"></div>
+                <div class="screw br"></div>
+              </div>
+              <div class="game-title">Neon Slider</div>
+              <div class="panel">
+                <div id="board" class="board" aria-label="Neon Slider"></div>
+                <div class="controls">
+                  <button id="shuffleBtn">Embaralhar</button>
+                  <button id="resetBtn">Reset</button>
+                  <button id="sairBtn">Sair</button>
+                </div>
+                <div id="msg" class="message" aria-live="polite"></div>
+                <div class="creator" style="margin-top:10px;text-align:center;font-size:0.85rem;color:rgba(255,255,255,0.75)">
+                  <button id="perfilBtn" style="background:none;border:0;color:var(--neon-2);cursor:pointer;font-weight:700">Perfil</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          
+
+          <script>
+            (function(){
+              const boardEl = document.getElementById('board');
+              const shuffleBtn = document.getElementById('shuffleBtn');
+              const resetBtn = document.getElementById('resetBtn');
+              const msgEl = document.getElementById('msg');
+
+              let state = [1,2,3,4,5,6,7,8,0];
+              const size = 3;
+
+              function render(){
+                boardEl.innerHTML = '';
+                state.forEach((val, idx) => {
+                  const tile = document.createElement('div');
+                  tile.className = val === 0 ? 'tile hidden' : 'tile';
+                  tile.textContent = val === 0 ? '' : String(val);
+                  tile.dataset.index = idx;
+                  tile.addEventListener('click', onTileClick);
+                  boardEl.appendChild(tile);
+                });
+              }
+
+              function getEmptyIndex(){ return state.indexOf(0); }
+
+              function isAdjacent(i, j){
+                const ri = Math.floor(i/size), rj = Math.floor(j/size);
+                const ci = i%size, cj = j%size;
+                return (ri===rj && Math.abs(ci-cj)===1) || (ci===cj && Math.abs(ri-rj)===1);
+              }
+
+              function moveTile(i){
+                const empty = getEmptyIndex();
+                if(isAdjacent(i, empty)){
+                  [state[i], state[empty]] = [state[empty], state[i]];
+                  render();
+                  if(checkWin()) showMessage('Parabéns — você venceu!');
+                }
+              }
+
+              function onTileClick(e){
+                const i = Number(e.currentTarget.dataset.index);
+                moveTile(i);
+              }
+
+              function shuffleMoves(n=100){
+                
+                for(let k=0;k<n;k++){
+                  const empty = getEmptyIndex();
+                  const neighbors = [];
+                  const r = Math.floor(empty/size), c = empty%size;
+                  if(r>0) neighbors.push(empty-size);
+                  if(r<size-1) neighbors.push(empty+size);
+                  if(c>0) neighbors.push(empty-1);
+                  if(c<size-1) neighbors.push(empty+1);
+                  const pick = neighbors[Math.floor(Math.random()*neighbors.length)];
+                  [state[empty], state[pick]] = [state[pick], state[empty]];
+                }
+                render();
+              }
+
+              function shuffle(){
+                state = [1,2,3,4,5,6,7,8,0];
+                shuffleMoves(200);
+                showMessage('');
+              }
+
+              function reset(){ state = [1,2,3,4,5,6,7,8,0]; render(); showMessage(''); }
+
+              function checkWin(){
+                for(let i=0;i<8;i++) if(state[i] !== i+1) return false;
+                return state[8]===0;
+              }
+
+              function showMessage(t){ msgEl.textContent = t; }
+
+              render();
+
+              shuffleBtn.addEventListener('click', shuffle);
+              resetBtn.addEventListener('click', reset);
+
+              window.addEventListener('keydown', (e) => {
+                const empty = getEmptyIndex();
+                const r = Math.floor(empty/size), c = empty%size;
+                if(e.key === 'ArrowUp' && r < size-1){ 
+                  const idx = empty + size; moveTile(idx);
+                } else if(e.key === 'ArrowDown' && r > 0){ const idx = empty - size; moveTile(idx);
+                } else if(e.key === 'ArrowLeft' && c < size-1){ const idx = empty + 1; moveTile(idx);
+                } else if(e.key === 'ArrowRight' && c > 0){ const idx = empty -1; moveTile(idx); }
+              });
+            })();
+          </script>
+
+
+<script>
+  const { ipcRenderer } = require('electron');
+
+  document.getElementById('minimize-btn').onclick = () => ipcRenderer.send('minimize-window');
+  document.getElementById('maximize-btn').onclick = () => ipcRenderer.send('maximize-window');
+  document.getElementById('close-btn').onclick = () => ipcRenderer.send('close-window');
+  document.getElementById('sairBtn').onclick = () => ipcRenderer.send('close-window');
+  document.getElementById('perfilBtn').onclick = () => ipcRenderer.send('open-external','https://github.com/almirfilho9');
+</script>
+
+
+        </body>
+        </html>
